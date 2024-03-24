@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Media Upload</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+
+<body>
+
+    <div class="bg-gray-100 w-full h-screen bg-black flex items-center justify-center">
+        <div class="max-w-md mx-auto bg-zinc-700 rounded-md shadow-md p-4 mt-4">
+            <h1 class="text-2xl font-bold mb-4">Upload Media</h1>
+
+            <form action="/update-status" method="post" enctype="multipart/form-data">
+                <div class="mb-4">
+                    <label for="media" class="block text-sm font-medium text-gray-600">Select Media</label>
+                    <input type="file" name="media" id="media" accept="image/*,video/*" required>
+                </div>
+
+                <div class="mb-4">
+                    <label for="caption" class="block text-sm font-medium text-gray-600">Caption</label>
+                    <input type="text" name="caption" id="caption" class="border rounded-md p-2 w-full" required>
+                </div>
+
+                <button type="submit"
+                    class="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600">Upload</button>
+            </form>
+        </div>
+    </div>
+
+</body>
+
+</html>

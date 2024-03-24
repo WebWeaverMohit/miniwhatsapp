@@ -1,0 +1,23 @@
+<!-- views/statusDetail.ejs -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Status Detail</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+
+<div class="max-w-md mx-auto bg-white rounded-md shadow-md p-4 mt-4">
+    <p class="font-bold text-blue-500"><%= user.username %></p>
+    <p class="text-gray-600 text-sm"><%= statusUpdate.createdAt.toLocaleString() %></p>
+    <p class="mt-2"><%= statusUpdate.text %></p>
+    <% if (statusUpdate.media) { %>
+        <img src="<%= statusUpdate.media %>" alt="Status Media" class="mt-2 rounded-md">
+    <% } %>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css" rel="stylesheet" />
+</head>
+
+<body>
+    <div class="main h-screen w-full flex bg-[#222e35]">
+        <div class="left h-full w-[25%] p-3 bg-[#111b21] text-white">
+            <div class="top flex px-5 py-3 bg-zinc-700 rounded-lg items-center justify-between">
+                <img class="h-[40px] rounded-full w-[40px] object-cover object-center" src="<%= user.profileImage %>"
+                    alt="">
+                <h2 class="text-xl">
+                    <%= user.username %>
+                </h2>
+                <div class="bg-black flex justify-between items-center gap-4 rounded-lg px-4 py-2">
+                    <i class="cursor-pointer ri-pencil-line"></i>
+                    <i class="open-over cursor-pointer ri-user-add-line"></i>
+                </div>
+            </div>
+            <!-- <div class="max-w-md mx-auto bg-zinc-500 rounded-md shadow-md p-4 mt-4">
+                <% if (statusUpdates.length === 0) { %>
+                    <a href="">
+                        <div class="h-[50px] w-[50px] bg-black rounded-full overflow-hidden">
+                            <img class="h-full w-full object-center object-cover rounded-full" src="<%= user.profileImage %>" alt="">
+                        </div>
+                    </a>
+                <% } else { %>
+                    <div class="grid grid-cols-2 gap-4">
+                        <% statusUpdates.forEach((status) => { %>
+                            <div class="bg-gray-200 rounded-md overflow-hidden shadow-md">
+                                <% if (status.media) { %>
+                                    <img src="<%= status.media %>" alt="Status Media" class="w-full h-32 object-cover">
+                                <% } else { %>
+                                    <div class="w-full h-32 flex items-center justify-center bg-gray-300">
+                                        <p>No media</p>
+                                    </div>
+                                <% } %>
+                                <div class="p-2">
+                                    <p class="font-bold text-blue-500"><%= user.username %></p>
+                                    <p class="text-gray-600 text-sm"><%= status.createdAt.toLocaleString() %></p>
+                                    <p class="mt-2"><%= status.text %></p>
+                                </div>
+                            </div>
+                        <% }) %>
+                    </div>
+                <% } %>
+            </div> -->
+            <div class="bottom mt-4">
+                <div class="chats">
+                    <% user.friends.forEach(function(friend){ %>
+                        <div onclick="openChat('<%= friend.profileImage %>', '<%= friend.username %>', '<%= friend._id %>')"
+                            id="shery_<%= friend._id %>"
+                            class="userChat flex items-center border-b-[0.1px] pb-4 px-6 pt-4">
+                            <img class="h-[40px] rounded-full mr-8 w-[40px] object-cover object-center"
+                                src="<%= friend.profileImage %>" alt="">
+                            <h2 class="text-xl">
+                                <%= friend.username %>
+                            </h2>
+                        </div>
+                        <% }) %>
+                </div>
+            </div>
+        </div>
+        <div class="right h-full hidden relative w-[75%] bg-[#0a141b]">
+            <div class="user flex h-18 px-5 py-3 w-full bg-zinc-500 items-center justify-start">
+                <img class="h-12 w-12 rounded-full object-center object-cover" src="" alt="">
+                <h2 class="ml-7 text-white text-xl">Username</h2>
+            </div>
+            <div class="conversationArea overflow-hidden bg-[#0a141b] h-[82.5vh] w-full px-4 py-4">
+
+            </div>
+            <div class="last w-full flex items-center justify-start">
+                <input class="inputMessage w-[92%] px-6 py-4" placeholder="Enter Message" type="text"
+                    onkeydown="handleKeyPress(event)">
+                <button onclick="sendMessage()" id="sendMessage"
+                    class=" px-8 py-4 bg-green-600 rounded-lg">Send</button>
+            </div>
+        </div>
+    </div>
+    <div
+        class="overlay hidden h-[100vh] absolute flex items-center justify-center z-4 top-[50%] left-[50%] -translate-y-[50%] bg-black/75 -translate-x-[50%] w-[100%]">
+        <div class="search rounded-lg h-[60vh] px-4 py-4 w-[60vw] bg-zinc-200">
+            <div class="flex items-center justify-between">
+                <input id="searchUserInput" class="rounded-lg w-[94%] px-4 py-2" placeholder="Search" type="text">
+                <i class="close-over bg-red-500 px-3 py-2 text-white cursor-pointer rounded-lg ri-close-line"></i>
+            </div>
+            <div class="searched-users rounded-lg h-[90%] overflow-hidden mt-2 w-full">
+                <div class="users"></div>
+            </div>
+        </div>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.7/axios.min.js"
+        integrity="sha512-NQfB/bDaB8kaSXF8E77JjhHG5PM6XVRxvHzkZiwl3ddWCEPBa23T76MuWSwAJdMGJnmQqM0VeY9kFszsrBEFrQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+        var socket = io();
+        const username = '<%= user.username %>'
+        let oppositeUser = null
+
+        socket.emit('join-server', username)
+
+        document.querySelector('#searchUserInput').addEventListener('input', async function (event) {
+            const data = document.querySelector('#searchUserInput').value
+            if (data === "") {
+                return
+            }
+            const response = await axios.post('/searchUser', {
+                data: data
+            })
+            document.querySelector('.users').innerHTML = ""
+            response.data.forEach(function (searchUser) {
+                appendSearchUser(searchUser.profileImage, searchUser.username, searchUser._id)
+            })
+        })
+
+        function appendSearchUser(profileImage, username, id) {
+            const template = `<div onclick="addFriend(event, '${id}', '${profileImage}', '${username}')" id="${id}" class="user cursor-pointer mt-1 px-4 bg-green-400 rounded-lg py-2 h-16 w-full flex items-center justify-start">
+                    <img class="h-10 mr-10 w-10 object-center object-cover rounded-full" src="${profileImage}" alt="">
+                    <h3 class="text-xl font-semibold">${username}</h3>
+                </div>`
+            document.querySelector('.users').innerHTML += template
+        }
+
+        async function addFriend(event, id, profileImage, username) {
+            const response = await axios.post('/addFriend', {
+                friendId: id
+            })
+
+            appendChat(profileImage, username, id)
+
+            document.querySelector('.overlay').style.display = "none"
+        }
+
+        function appendChat(profileImage, username, id) {
+
+            if (document.querySelector(`.chats #shery_${id}`)) {
+                return
+            }
+
+            const template = `<div id="shery_${id}" class="userChat flex items-center border-b-[0.1px] pb-4 px-6 pt-4">
+                        <img class="h-[40px] rounded-full mr-8 w-[40px] object-cover object-center" src="${profileImage}" alt="">
+                        <h2 class="text-xl">${username}</h2>
+                    </div>`
+
+            document.querySelector('.chats').innerHTML += template
+        }
+
+        document.querySelector('.close-over').addEventListener("click", function () {
+            document.querySelector('.overlay').style.display = "none"
+            document.querySelector("#searchUserInput").value = ""
+        })
+
+        document.querySelector('.open-over').addEventListener("click", function () {
+            document.querySelector('.overlay').style.display = "flex"
+        })
+
+        async function openChat(profileImage, username, id) {
+            oppositeUser = username
+            document.querySelector('.right').style.display = "initial"
+
+            const response = await axios.post('/getMessages', {
+                oppositeUser: username
+            })
+
+            document.querySelector('.conversationArea').innerHTML = ""
+
+            response.data.forEach(function (message) {
+                if (message.sender !== username) {
+                    appendOutgoingMessage(message.data)
+                } else
+                    appendIncomingMessage(message.data)
+            })
+
+            document.querySelector('.right .user img').setAttribute('src', profileImage)
+            document.querySelector('.right .user h2').innerHTML = username
+        }
+
+        function appendOutgoingMessage(message) {
+            var template = `<div class="message outgoingMessage text-lg mt-2 text-white px-4 py-2 rounded-full bg-[#202d32] ml-auto w-fit">
+                    ${message}
+                </div>`
+
+            document.querySelector('.conversationArea').innerHTML += template
+        }
+
+        function appendIncomingMessage(message) {
+            var template = `<div class="message incomingMessage text-lg mt-2 text-white px-4 py-2 rounded-full bg-[#202d32] mr-auto w-fit">
+                    ${message}
+                </div>`
+
+            document.querySelector('.conversationArea').innerHTML += template
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                document.querySelector('#sendMessage').click();
+            }
+        }
+
+        function sendMessage() {
+            const message = document.querySelector('.inputMessage').value
+            appendOutgoingMessage(message)
+            document.querySelector('.inputMessage').value = ""
+            handleKeyPress(event)
+
+            const messageObject = {
+                message: message,
+                sender: username,
+                receiver: oppositeUser
+            }
+
+            socket.emit('send-private-message', messageObject)
+        }
+
+        socket.on('receive-private-message', messageObject => {
+            if (messageObject.sender == oppositeUser) {
+                appendIncomingMessage(messageObject.message)
+            }
+        })
+
+    </script>
+</body>
+
+</html>
